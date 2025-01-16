@@ -14,4 +14,4 @@ ml load Python/3.12.3
 cd /home/ll464721/text-anonymization-benchmark
 echo "JOB ID: $SLURM_JOB_ID"
 source tab-venv/bin/activate
-python longforme_experiments/train_model.py
+python longformer_experiments/train_model.py
