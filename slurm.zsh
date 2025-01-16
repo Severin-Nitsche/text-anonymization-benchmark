@@ -9,8 +9,8 @@
 #SBATCH --mail-user=severin.nitsche@rwth-aachen.de
 #SBATCH --mail-type=END
 
-ml load GCCcore/.13.3.0
-ml load Python/3.12.3
+ml load GCCcore/.12.2.0
+ml load Python/3.10.8
 cd /home/ll464721/text-anonymization-benchmark
 echo "JOB ID: $SLURM_JOB_ID"
 source tab-venv/bin/activate
