@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from typing import List,Any
 from transformers import LongformerModel
 from tokenizers import Encoding
-from torch import nn
+from torch import nn, argmax
 from dataclasses import dataclass
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerFast
@@ -34,3 +34,13 @@ class Model(nn.Module):
         )
         pooler = b.last_hidden_state
         return self.classifier(pooler)
+
+class InferenceModel(Model):
+    """
+    Model for inference (Slaps an argmax layer ontop of `Model`)
+    """
+    def __init__(self, model, num_labels):
+        super().__init__(model, num_labels)
+    def forward(self, batch):
+        tensor = super().forward(batch).permute(0,2,1)
+        return argmax(tensor,1)

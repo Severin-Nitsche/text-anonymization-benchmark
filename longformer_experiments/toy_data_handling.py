@@ -67,7 +67,9 @@ class LabelSet:
         """
         text_labels = align_tokens_and_annotations_bio2(tokenized_text, annotations)
         return list(map(self.label_to_id, text_labels)) # TODO: In data_handling.py identifier_types, offsets, ids (See align_tokens_and_annotations_bio2)
-
+    def pretty_print_token_tags(self, text, offsets, labels):
+        for (start, end), label in zip(offsets, labels):
+            print(f'{text[start:end]} - {self.id_to_label(label)}')
 
 """
 Windowing Logic
@@ -75,9 +77,12 @@ Windowing Logic
 
 @dataclass
 class WindowEntry:
-    input_ids: Tokens # TODO: Is this the tokenized input?
+    tokens: Tokens # TODO: Is this the tokenized input?
     attention_masks: Tokens # The tokens that are not padding (prevent attending to non-sensical pad values)
     labels: Tokens # Target label ids ([] if inference only)
+    offsets: Tokens # Offsets in original text
+    ix: int # The data index (Due to windowing, one entry might span multiple windowEntries)
+
 # TODO: here again we exlclude more data from data_handling.py
 
 class WindowedDataset(Dataset):
@@ -99,28 +104,31 @@ class WindowedDataset(Dataset):
             window_stride = tokens_per_batch
         self.window_stride = window_stride
         self.tokenizer = tokenizer
-        self.texts = []
-        self.annotations = [] # Only relevant for Training
+        # self.texts = []
+        # self.annotations = [] # Only relevant for Training
 
-        for entry in data:
-            self.texts.append(entry["text"])
-            if include_annotations:
-                self.annotations.append(entry["annotations"])
-        
+        # for entry in data:
+        #     self.texts.append(entry["text"])
+        #     if include_annotations:
+        #         self.annotations.append(entry["annotations"])
+
+        texts = list(map(lambda entry: entry['text'], data))
+        # annotations = map(lambda entry: entry['annotations'], data)
+
         # Tokenize the data
-        tokenized_batch = self.tokenizer(self.texts, add_special_tokens=False)
-
+        tokenized_batch = self.tokenizer(texts, add_special_tokens=False)
+        # print(tokenized_batch.offset_mapping)
         # TODO: Again data_handling.py did some offset stuff here (also some offset flag in tokenized_batch)
 
         # Create a list with windows
         self.entries: List[WindowEntry] = []
-        for ix in range(len(tokenized_batch.encodings)):
-            encoding = tokenized_batch[ix]
+        for ix, (encoding, entry) in enumerate(zip(tokenized_batch.encodings, data)):
+            # encoding = tokenized_batch[ix]
             sequence_length = len(encoding.tokens)
-            label = [] # padding tokens
+            labels = [] # padding tokens
             if include_annotations: # Align annotations
-                raw_annotations = self.annotations[ix]
-                label = label_set.get_aligned_label_ids_from_annotations(encoding, raw_annotations)
+                raw_annotations = entry['annotations'] # self.annotations[ix]
+                labels = label_set.get_aligned_label_ids_from_annotations(encoding, raw_annotations)
             
             for start in range(0, max(sequence_length - tokens_per_batch + 1,1), self.window_stride):
                 end = min(start + tokens_per_batch, sequence_length)
@@ -128,9 +136,11 @@ class WindowedDataset(Dataset):
                 
                 self.entries.append(
                     WindowEntry(
-                        input_ids=encoding.ids[start:end] + [self.tokenizer.pad_token_id] * padding_to_add,
-                        labels=label[start:end] + [-100] * padding_to_add if include_annotations else None, # padded labels
-                        attention_masks=encoding.attention_mask[start:end] + [0] * padding_to_add
+                        tokens=encoding.ids[start:end] + [self.tokenizer.pad_token_id] * padding_to_add,
+                        labels=labels[start:end] + [-100] * padding_to_add if include_annotations else None, # padded labels
+                        attention_masks=encoding.attention_mask[start:end] + [0] * padding_to_add,
+                        offsets=encoding.offsets,
+                        ix=ix
                     )
                 )
     def __len__(self):
@@ -150,13 +160,21 @@ class WindowBatch:
         self.input_ids: torch.Tensor
         self.attention_masks: torch.Tensor
         self.labels: torch.Tensor
+        self.offsets: List
+        self.ixs: List
+
+        self.offsets = []
+        self.ixs = []
+
         input_ids: Batch = []
         masks: Batch = []
         labels: Batch = []
         for entry in entries:
-            input_ids.append(entry.input_ids)
+            input_ids.append(entry.tokens)
             masks.append(entry.attention_masks)
             labels.append(entry.labels)
+            self.offsets.append(entry.offsets)
+            self.ixs.append(entry.ix)
         self.input_ids = torch.LongTensor(input_ids)
         self.attention_masks = torch.LongTensor(masks)
         if labels[0] is not None:
