@@ -1,9 +1,10 @@
 import torch
+import json
 from transformers import LongformerTokenizerFast
 from toy_data_handling import *
 from torch.utils.data.dataloader import DataLoader
 from longformer_model import InferenceModel
-from data_manipulation import dev_raw
+# from data_manipulation import dev_raw
 
 
 bert = "allenai/longformer-base-4096"
@@ -26,13 +27,17 @@ model.eval()
 #     }
 # ]
 
-toy = WindowedDataset(data=dev_raw, tokenizer=tokenizer, label_set=label_set, include_annotations=False, tokens_per_batch=4096)
-toyloader = DataLoader(toy, collate_fn=WindowBatch, batch_size=2)
+with open('../out/posts.json',"r") as posts_file:
+    posts_json = json.load(posts_file)
+    posts = [post['data'] for post in posts_json]
 
-for X in toyloader:
-    with torch.no_grad():
-        pred = model(X)
-        print(pred)
-        for ix, offsets, prediction in zip(X.ixs, X.offsets, pred):
-            print(f'==== Inference #{ix} ====')
-            label_set.pretty_print_token_tags(dev_raw[ix]['text'], offsets, prediction)
+    toy = WindowedDataset(data=posts, tokenizer=tokenizer, label_set=label_set, include_annotations=False, tokens_per_batch=4096)
+    toyloader = DataLoader(toy, collate_fn=WindowBatch, batch_size=1)
+
+    for X in toyloader:
+        with torch.no_grad():
+            pred = model(X)
+            print(pred)
+            for ix, offsets, prediction in zip(X.ixs, X.offsets, pred):
+                print(f'==== Inference #{ix} ====')
+                label_set.pretty_print_token_tags(posts[ix]['text'], offsets, prediction)

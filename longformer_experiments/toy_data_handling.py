@@ -48,6 +48,14 @@ class LabelSet:
             return "O"
         else:
             return f'{"BI"[(id-1)%2]}-{self.labels[(id-1)//2]}'
+    def id_to_color(self, id):
+        """
+        ANSI COLOR CODES FOR LABELS
+        """
+        if id == 0:
+            return "\033[0m"
+        else:
+            return '\033[93m'
     def label_to_id(self, label):
         """
         Convert from label to id
@@ -69,7 +77,8 @@ class LabelSet:
         return list(map(self.label_to_id, text_labels)) # TODO: In data_handling.py identifier_types, offsets, ids (See align_tokens_and_annotations_bio2)
     def pretty_print_token_tags(self, text, offsets, labels):
         for (start, end), label in zip(offsets, labels):
-            print(f'{text[start:end]} - {self.id_to_label(label)}')
+            print(f'{self.id_to_color(label)}{text[start:end]}', end=' ')
+        print('\n')
 
 """
 Windowing Logic
