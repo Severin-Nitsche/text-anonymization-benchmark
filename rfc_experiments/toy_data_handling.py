@@ -160,7 +160,10 @@ class WindowedDataset(Dataset):
 """
 Batching logic
 Convert from Dataset aka. glorified lists to tensors
+(This will automatically use CUDA if available)
 """
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class WindowBatch:
     def __getitem__(self, item):
@@ -188,4 +191,7 @@ class WindowBatch:
         self.attention_masks = torch.LongTensor(masks)
         if labels[0] is not None:
             self.labels = torch.LongTensor(labels)
+            self.labels.to(device)
+        self.input_ids.to(device)
+        self.labels.to(device)
 # TODO: again we omitted the alignment stuff
