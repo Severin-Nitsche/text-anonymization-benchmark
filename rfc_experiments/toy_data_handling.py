@@ -191,7 +191,9 @@ class WindowBatch:
         self.attention_masks = torch.LongTensor(masks)
         if labels[0] is not None:
             self.labels = torch.LongTensor(labels)
-            self.labels.to(device)
-        self.input_ids.to(device)
-        self.attention_masks.to(device)
+            if device == 'cuda':
+                self.labels = self.labels.cuda()
+        if device == 'cuda':
+            self.input_ids = self.input_ids.cuda()
+            self.attention_masks = self.attention_masks.cuda()
 # TODO: again we omitted the alignment stuff
