@@ -193,5 +193,5 @@ class WindowBatch:
             self.labels = torch.LongTensor(labels)
             self.labels.to(device)
         self.input_ids.to(device)
-        self.labels.to(device)
+        self.attention_masks.to(device)
 # TODO: again we omitted the alignment stuff
