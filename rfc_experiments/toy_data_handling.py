@@ -23,8 +23,8 @@ def align_tokens_and_annotations_bio2(tokenized: Encoding, annotations):
             token_ix = tokenized.char_to_token(char_ix)
             if token_ix is not None:
                 first_token = min(first_token, token_ix)
-                aligned_labels[token_ix] = f'I-{annotation['label']}'
-        aligned_labels[first_token] = f'B-{annotation['label']}'
+                aligned_labels[token_ix] = f"I-{annotation['label']}"
+        aligned_labels[first_token] = f"B-{annotation['label']}"
     return aligned_labels # TODO: data_handling.py returned identifier_types, offsets, ids where ids is an additional argument to this function. Check this.
 
 class LabelSet:

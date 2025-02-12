@@ -32,12 +32,12 @@ def process_reddit(path, label=r_privacy):
             processed.extend([{
                 # 'split': data['dataset_type'],
                 'text': data['data']['text'],
-                'doc_id': f'reddit-{data['id']}',
+                'doc_id': f"reddit-{data['id']}",
                 'annotations': [label(annotation, data) for annotation in annotator['result']]
             } for annotator in data['annotations']])
         return processed
 
 
-dev_processed = process_echr('../echr_dev.json')
-train_processed = process_echr('../echr_train.json')
-test_processed = process_echr('../echr_test.json')
+dev_processed = process_echr('echr_dev.json')
+train_processed = process_echr('echr_train.json')
+test_processed = process_echr('echr_test.json')
