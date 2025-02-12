@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 #SBATCH --job-name=train-rfc
-#SBATCH --output=tab_{%J}.txt
+#SBATCH --output=tab_%J.txt
 #SBATCH --partition=c23g
 #SBATCH --gres=gpu:1
 
