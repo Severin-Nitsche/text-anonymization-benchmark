@@ -16,7 +16,10 @@ def process_echr(path, label=privacy):
                 'split': data['dataset_type'],
                 'text': data['text'],
                 'doc_id': data['doc_id'],
-                'annotations': [label(annotation, data) for annotation in data['annotations'][annotator]['entity_mentions']]
+                'annotations': list(filter(
+                    lambda annotation: annotation['label'] == 'MASK',
+                    [label(annotation, data) for annotation in data['annotations'][annotator]['entity_mentions']]
+                ))
             } for annotator in data['annotations']])
         return processed
 
@@ -33,7 +36,10 @@ def process_reddit(path, label=r_privacy):
                 # 'split': data['dataset_type'],
                 'text': data['data']['text'],
                 'doc_id': f"reddit-{data['id']}",
-                'annotations': [label(annotation, data) for annotation in annotator['result']]
+                'annotations': list(filter(
+                    lambda annotation: annotation['label'] == 'MASK',
+                    [label(annotation, data) for annotation in annotator['result']]
+                ))
             } for annotator in data['annotations']])
         return processed
 
