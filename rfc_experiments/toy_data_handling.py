@@ -146,7 +146,7 @@ class WindowedDataset(Dataset):
                 self.entries.append(
                     WindowEntry(
                         tokens=encoding.ids[start:end] + [self.tokenizer.pad_token_id] * padding_to_add,
-                        labels=labels[start:end] + [-100] * padding_to_add if include_annotations else None, # padded labels
+                        labels=labels[start:end] + [-1] * padding_to_add if include_annotations else None, # padded labels
                         attention_masks=encoding.attention_mask[start:end] + [0] * padding_to_add,
                         offsets=encoding.offsets,
                         ix=ix
