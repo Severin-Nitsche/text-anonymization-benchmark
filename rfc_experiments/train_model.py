@@ -56,7 +56,7 @@ if __name__ == '__main__':
         model.train()
         last_loss, avg_loss = train_one_epoch(model, optimizer, criterion, trainloader)
         print('Epoch: ', epoch + 1)
-        print('Training loss (last/avg): {0:.2f}/{0:.2f}'.format(last_loss, avg_loss))
+        print('Training loss (last/avg): {0:.2f}/{1:.2f}'.format(last_loss, avg_loss))
     
     model.eval()
     running_loss = 0
